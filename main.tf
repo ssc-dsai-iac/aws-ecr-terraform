@@ -18,36 +18,54 @@ resource "aws_ecr_repository" "this" {
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
+# Create an IAM User for GitHub
+# ---------------------------------------------------------------------------------------------------------------------
+resource "aws_iam_user" "this" {
+  name = "github-principal"
+  tags = var.tags
+}
+
+resource "aws_iam_access_key" "this" {
+  user = aws_iam_user.this.name
+}
+
+# ---------------------------------------------------------------------------------------------------------------------
 # Elastic Container Registry (ECR) Policies
 # ---------------------------------------------------------------------------------------------------------------------
-data "aws_iam_policy_document" "authorization_token_access" {
+data "aws_iam_policy_document" "this" {
   statement {
     sid    = "GetAuthorizationToken"
     effect = "Allow"
+    principals {
+      type = "AWS"
+      identifiers = [aws_iam_user.this.arn]
+    }
     actions = [
       "ecr:GetAuthorizationToken"
     ]
-    resources = ["*"]
   }
-}
 
-data "aws_iam_policy_document" "allow_pull_access" {
   statement {
     sid    = "AllowPull"
     effect = "Allow"
+    principals {
+      type = "AWS"
+      identifiers = [aws_iam_user.this.arn]
+    }
     actions = [
       "ecr:GetDownloadUrlForLayer",
       "ecr:BatchGetImage",
       "ecr:BatchCheckLayerAvailability"
     ]
-    resources = [aws_ecr_repository.this.arn]
   }
-}
 
-data "aws_iam_policy_document" "allow_push_access" {
   statement {
     sid    = "AllowPush"
     effect = "Allow"
+    principals {
+      type = "AWS"
+      identifiers = [aws_iam_user.this.arn]
+    }
     actions = [
       "ecr:GetDownloadUrlForLayer",
       "ecr:BatchGetImage",
@@ -57,13 +75,12 @@ data "aws_iam_policy_document" "allow_push_access" {
       "ecr:UploadLayerPart",
       "ecr:CompleteLayerUpload"
     ]
-    resources = [aws_ecr_repository.this.arn]
   }
 }
 
 resource "aws_ecr_repository_policy" "this" {
   repository = aws_ecr_repository.this.name
-  policy     = join(data.aws_iam_policy_document.authorization_token_access.json, data.aws_iam_policy_document.allow_pull_access.json, data.aws_iam_policy_document.allow_push_access.json)
+  policy     = data.aws_iam_policy_document.this.json
 }
 
 

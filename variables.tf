@@ -1,25 +1,7 @@
-variable "use_fullname" {
-  description = "Set 'true' to use `namespace-stage-name` for ecr repository name, else `name`"
-  type        = bool
-  default     = true
-}
-
 variable "name" {
   description = "Name of the Image"
   type = string
   default = ""
-}
-
-variable "principals_full_access" {
-  description = "Principal ARNs to provide with full access to the ECR"
-  type        = list(string)
-  default     = []
-}
-
-variable "principals_readonly_access" {
-  description = "Principal ARNs to provide with readonly access to the ECR"
-  type        = list(string)
-  default     = []
 }
 
 variable "scan_images_on_push" {
@@ -40,12 +22,6 @@ variable "image_tag_mutability" {
   default     = "IMMUTABLE"
 }
 
-variable "enable_lifecycle_policy" {
-  description = "Set to false to prevent the module from adding any lifecycle policies to any repositories"
-  type        = bool
-  default     = true
-}
-
 variable "protected_tags" {
   description = "Name of image tags prefixes that should not be destroyed. Useful if you tag images with names like `dev`, `staging`, and `prod`"
   type        = set(string)
@@ -62,4 +38,10 @@ variable "kms_key" {
   description = "The ARN of the KMS key to use when encryption_type is KMS. If not specified, uses the default AWS managed key for ECR."
   type = string
   default = null
+}
+
+variable "tags" {
+  description   = "A map of tags to add to all resources"
+  type          = map(string)
+  default       = {}
 }
